@@ -104,5 +104,16 @@
         <item name="android:textColor">@color/tab_text</item>
     </style>
 
+    <style name="CardViewStyle" parent="Widget.Leanback.ImageCardViewStyle">
+        <item name="lbImageCardViewType">Title|Content</item>
+    </style>
 
+    <style name="CardViewInfoAreaStyle" parent="Widget.Leanback.ImageCardView.InfoAreaStyle">
+        <item name="android:background">@color/gray_dark</item>
+    </style>
+
+    <style name="VpnProfileCardViewTheme">
+        <item name="imageCardViewStyle">@style/CardViewStyle</item>
+        <item name="imageCardViewInfoAreaStyle">@style/CardViewInfoAreaStyle</item>
+    </style>
 </resources>

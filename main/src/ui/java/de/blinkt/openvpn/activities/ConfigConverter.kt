@@ -178,6 +178,7 @@ class ConfigConverter : BaseActivity(), FileSelectCallback, View.OnClickListener
         outState.putParcelable("mSourceUri", mSourceUri)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, result: Intent?) {
         if (requestCode == RESULT_INSTALLPKCS12 && resultCode == Activity.RESULT_OK) {
             showCertDialog()
