@@ -14,7 +14,7 @@ import de.blinkt.openvpn.core.VpnStatus
 import de.blinkt.openvpn.fragments.Utils.getWarningText
 
 class VpnProfileCardPresenter(context: Context) :
-    AbstractCardPresenter<ImageCardView, VpnProfile>(context) {
+    AbstractCardPresenter<ImageCardView, VpnProfile?>(context) {
     override fun onCreateView(): ImageCardView {
         val imageCardView = LayoutInflater.from(context)
             .inflate(R.layout.presenter_vpn_profile_card, null, false) as ImageCardView
@@ -26,15 +26,20 @@ class VpnProfileCardPresenter(context: Context) :
         return imageCardView
     }
 
-    override fun onBindViewHolder(vpnProfile: VpnProfile, imageCardView: ImageCardView) {
-        imageCardView.titleText = vpnProfile.name
-        val warningText = getWarningText(context, vpnProfile)
-        if (vpnProfile.uuidString == VpnStatus.getLastConnectedVPNProfile()) {
-            imageCardView.contentText = VpnStatus.getLastCleanLogMessage(imageCardView.context)
+    override fun onBindViewHolder(vpnProfile: VpnProfile?, imageCardView: ImageCardView) {
+        if (vpnProfile == null) {
+            imageCardView.titleText = context.getText(R.string.menu_add_profile)
+            imageCardView.mainImage = context.getDrawable(R.drawable.ic_add_circle_outline_white_24dp)
         } else {
-            imageCardView.contentText = warningText
+            imageCardView.titleText = vpnProfile.name
+            val warningText = getWarningText(context, vpnProfile)
+            if (vpnProfile.uuidString == VpnStatus.getLastConnectedVPNProfile()) {
+                imageCardView.contentText = VpnStatus.getLastCleanLogMessage(imageCardView.context)
+            } else {
+                imageCardView.contentText = warningText
+            }
+            imageCardView.mainImage = context.getDrawable(R.drawable.ic_stat_vpn)
         }
-        imageCardView.mainImage = context.getDrawable(R.drawable.ic_stat_vpn)
     }
 
     override fun onUnbindViewHolder(imageCardView: ImageCardView) {

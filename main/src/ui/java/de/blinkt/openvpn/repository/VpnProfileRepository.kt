@@ -13,4 +13,11 @@ interface VpnProfileRepository {
 
     fun getAllProfiles(): Collection<VpnProfile>
 
+    fun addProfile(vpnProfile: VpnProfile)
+
+    fun findProfileByName(name: String): VpnProfile?
+
+    fun saveProfile(vpnProfile: VpnProfile)
+
+    fun saveAllProfiles()
 }

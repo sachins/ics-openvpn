@@ -16,4 +16,20 @@ class SharePreferenceVpnProfileRepository(override val application: Application)
     override fun getAllProfiles(): Collection<VpnProfile> {
         return profileManager.profiles
     }
+
+    override fun addProfile(vpnProfile: VpnProfile) {
+        profileManager.addProfile(vpnProfile)
+    }
+
+    override fun findProfileByName(name: String): VpnProfile? {
+        return profileManager.getProfileByName(name)
+    }
+
+    override fun saveProfile(vpnProfile: VpnProfile) {
+        ProfileManager.saveProfile(application, vpnProfile)
+    }
+
+    override fun saveAllProfiles() {
+        profileManager.saveProfileList(application)
+    }
 }

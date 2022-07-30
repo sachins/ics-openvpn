@@ -23,6 +23,7 @@ class BrowseAdapter(context: Context, vpnProfiles: Collection<VpnProfile>) : Arr
         val cardPresenter = VpnProfileCardPresenter(context)
         val listRowAdapter = ArrayObjectAdapter(cardPresenter)
         listRowAdapter.addAll(0, vpnProfiles)
+        listRowAdapter.add(null) // To put add profile cell
         val headerItem = HeaderItem(context.getString(R.string.vpn_list_title))
         add(ListRow(headerItem, listRowAdapter))
     }

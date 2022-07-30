@@ -5,24 +5,30 @@
 
 package de.blinkt.openvpn.fragments.tv
 
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.widget.EditText
+import android.widget.Toast
 import androidx.leanback.app.BackgroundManager
 import androidx.leanback.app.BrowseSupportFragment
-import androidx.leanback.app.RowsSupportFragment
-import androidx.leanback.widget.*
+import androidx.leanback.widget.ArrayObjectAdapter
+import androidx.leanback.widget.ListRowPresenter
 import androidx.lifecycle.ViewModelProvider
+import com.obsez.android.lib.filechooser.ChooserDialog
 import de.blinkt.openvpn.R
+import de.blinkt.openvpn.VpnProfile
+import de.blinkt.openvpn.activities.ConfigConverter
+import de.blinkt.openvpn.activities.VPNPreferences
 import de.blinkt.openvpn.viewmodel.BrowseViewModel
 
-private const val HEADER_ID_1: Long = 1
-private const val HEADER_NAME_1 = "Page Fragment"
-private const val HEADER_ID_2: Long = 2
-private const val HEADER_NAME_2 = "Rows Fragment"
-private const val HEADER_ID_3: Long = 3
-private const val HEADER_NAME_3 = "Settings Fragment"
-private const val HEADER_ID_4: Long = 4
-private const val HEADER_NAME_4 = "User agreement Fragment"
+private const val START_VPN_CONFIG = 92
+private const val IMPORT_PROFILE = 231
+private const val TAG = "MainTvFragment"
 
 class MainTvFragment : BrowseSupportFragment() {
 
@@ -39,7 +45,11 @@ class MainTvFragment : BrowseSupportFragment() {
                 attach(requireActivity().window)
             }
         }
-        mainFragmentRegistry.registerFragment(PageRow::class.java, PageRowFragmentFactory(backgroundManager))
+        setOnItemViewClickedListener { _, item, _, _ ->
+            when (item) {
+                null -> onAddOrDuplicateProfile(null)
+            }
+        }
     }
 
     private fun setupUiElements() {
@@ -55,39 +65,94 @@ class MainTvFragment : BrowseSupportFragment() {
         viewModel.browseContent.observe(this) {
             adapter = BrowseAdapter(requireContext(), viewModel.browseContent.value ?: emptyList())
         }
-        /*view?.postDelayed({
-            createRows()
-        }, 2000)*/
     }
 
-    private fun createRows() {
-        val headerItem1 = HeaderItem(HEADER_ID_1, HEADER_NAME_1)
-        val pageRow1 = PageRow(headerItem1)
-        rowsAdapter.add(pageRow1)
-
-        val headerItem2 = HeaderItem(HEADER_ID_2, HEADER_NAME_2)
-        val pageRow2 = PageRow(headerItem2)
-        rowsAdapter.add(pageRow2)
-
-        val headerItem3 = HeaderItem(HEADER_ID_3, HEADER_NAME_3)
-        val pageRow3 = PageRow(headerItem3)
-        rowsAdapter.add(pageRow3)
-
-        val headerItem4 = HeaderItem(HEADER_ID_4, HEADER_NAME_4)
-        val pageRow4 = PageRow(headerItem4)
-        rowsAdapter.add(pageRow4)
-    }
-
-    private class PageRowFragmentFactory(private val backgroundManager: BackgroundManager) : FragmentFactory<Fragment>() {
-
-        override fun createFragment(rowObj: Any?): Fragment {
-            val row = rowObj as PageRow
-            backgroundManager.drawable = null
-            return SampleFragmentA()
+    private fun onAddOrDuplicateProfile(copyProfile: VpnProfile?) {
+        val context: Context? = activity
+        if (context != null) {
+            val entry = EditText(context)
+            entry.setSingleLine()
+            val dialog = AlertDialog.Builder(context)
+            if (copyProfile == null) dialog.setTitle(R.string.menu_add_profile) else {
+                dialog.setTitle(getString(R.string.duplicate_profile_title, copyProfile.name))
+                entry.setText(getString(R.string.copy_of_profile, copyProfile.name))
+            }
+            dialog.setMessage(R.string.add_profile_name_prompt)
+            dialog.setView(entry)
+            dialog.setNeutralButton(R.string.menu_import_short) { _, _ -> startFilePicker() }
+            dialog.setPositiveButton(
+                android.R.string.ok
+            ) { dialog12: DialogInterface?, which: Int ->
+                val name = entry.text.toString()
+                if (viewModel.findVpnProfileByName(name) == null) {
+                    val profile: VpnProfile
+                    if (copyProfile != null) {
+                        profile = copyProfile.copy(name)
+                        // Remove restrictions on copy profile
+                        profile.mProfileCreator = null
+                        profile.mUserEditable = true
+                    } else {
+                        profile = VpnProfile(name)
+                    }
+                    addProfile(profile)
+                    editVPN(profile)
+                } else {
+                    Toast.makeText(
+                        activity,
+                        R.string.duplicate_profile_name,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            dialog.setNegativeButton(android.R.string.cancel, null)
+            dialog.create().show()
         }
     }
 
-    class SampleFragmentA : RowsSupportFragment() {
+    private fun addProfile(profile: VpnProfile) {
+        viewModel.addVpnProfile(profile)
+        viewModel.saveAllProfiles()
+        viewModel.saveVpnProfile(profile)
+    }
 
+    private fun editVPN(profile: VpnProfile) {
+        val vpnPrefIntent = Intent(requireActivity(), VPNPreferences::class.java)
+            .putExtra(requireActivity().packageName + ".profileUUID", profile.uuid.toString())
+        startActivityForResult(vpnPrefIntent, START_VPN_CONFIG)
+    }
+
+    private fun startFilePicker(): Boolean {
+        ChooserDialog(requireActivity())
+            .withChosenListener { dir, dirFile ->
+                Toast.makeText(requireContext(), "Selected: $dir", Toast.LENGTH_LONG).show()
+                startConfigImport(Uri.fromFile(dirFile))
+            }
+            .withOnCancelListener {
+                Toast.makeText(requireContext(), "Cancelled", Toast.LENGTH_SHORT).show()
+                it.cancel()
+            }
+            .build()
+            .show()
+        return true
+    }
+
+    private fun startConfigImport(uri: Uri) {
+        val startImport = Intent(activity, ConfigConverter::class.java)
+        startImport.action = ConfigConverter.IMPORT_PROFILE
+        startImport.data = uri
+        startActivityForResult(startImport, IMPORT_PROFILE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode != Activity.RESULT_OK) return
+
+        when(requestCode) {
+            IMPORT_PROFILE -> {
+                val profileUUID = data?.getStringExtra(VpnProfile.EXTRA_PROFILEUUID) ?: return
+                viewModel.reinit()
+            }
+        }
     }
 }

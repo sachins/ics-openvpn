@@ -15,11 +15,15 @@
             android:name="android.hardware.touchscreen"
             android:required="false" />
 
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <!-- This library wants SDK version 23 but we do runtime checks to not use it before
         API 23 -->
     <uses-sdk tools:overrideLibrary="androidx.security"/>
 
-    <application android:banner="@mipmap/banner_tv">
+    <application android:banner="@mipmap/banner_tv"
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".activities.tv.TvActivity"
             android:banner="@mipmap/banner_tv"

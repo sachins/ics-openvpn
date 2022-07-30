@@ -23,4 +23,24 @@ class BrowseViewModel(application: Application) : AndroidViewModel(application) 
     private fun getVpnProfileList(): Collection<VpnProfile> {
         return vpnProfileRepository.getAllProfiles()
     }
+
+    fun reinit() {
+        browseContent.value = getVpnProfileList()
+    }
+
+    fun addVpnProfile(vpnProfile: VpnProfile) {
+        vpnProfileRepository.addProfile(vpnProfile)
+    }
+
+    fun findVpnProfileByName(name: String): VpnProfile? {
+        return vpnProfileRepository.findProfileByName(name)
+    }
+
+    fun saveVpnProfile(vpnProfile: VpnProfile) {
+        vpnProfileRepository.saveProfile(vpnProfile)
+    }
+
+    fun saveAllProfiles() {
+        vpnProfileRepository.saveAllProfiles()
+    }
 }

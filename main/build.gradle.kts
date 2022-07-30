@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         minSdk = 21
-        targetSdk = 32
+        targetSdk = 29 // Targeting < 30 to use file picker
         versionCode = 192
         versionName = "0.7.37"
         externalNativeBuild {
@@ -171,26 +171,25 @@ dependencies {
     implementation("androidx.annotation:annotation:1.3.0")
     implementation("androidx.core:core:$coreVersion")
 
-
-    // Is there a nicer way to do this?
-    dependencies.add("uiImplementation", "androidx.constraintlayout:constraintlayout:2.1.3")
-    dependencies.add("uiImplementation", "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
-    dependencies.add("uiImplementation", "androidx.cardview:cardview:1.0.0")
-    dependencies.add("uiImplementation", "androidx.recyclerview:recyclerview:1.2.1")
-    dependencies.add("uiImplementation", "androidx.appcompat:appcompat:1.4.1")
-    dependencies.add("uiImplementation", "com.github.PhilJay:MPAndroidChart:v3.1.0")
-    dependencies.add("uiImplementation", "com.squareup.okhttp3:okhttp:4.9.3")
-    dependencies.add("uiImplementation", "androidx.core:core:$coreVersion")
-    dependencies.add("uiImplementation", "androidx.core:core-ktx:$coreVersion")
-    dependencies.add("uiImplementation", "androidx.fragment:fragment-ktx:$fragment_version")
-    dependencies.add("uiImplementation", "androidx.leanback:leanback:1.0.0")
-    dependencies.add("uiImplementation", "androidx.preference:preference:$preferenceVersion")
-    dependencies.add("uiImplementation", "androidx.preference:preference-ktx:$preferenceVersion")
-    dependencies.add("uiImplementation", "com.google.android.material:material:$materialVersion")
-    dependencies.add("uiImplementation", "androidx.webkit:webkit:1.4.0")
-    dependencies.add("uiImplementation", "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1")
-    dependencies.add("uiImplementation", "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
-    dependencies.add("uiImplementation","androidx.security:security-crypto:1.0.0")
+    "uiImplementation"("androidx.constraintlayout:constraintlayout:2.1.3")
+    "uiImplementation"("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
+    "uiImplementation"("androidx.cardview:cardview:1.0.0")
+    "uiImplementation"("androidx.recyclerview:recyclerview:1.2.1")
+    "uiImplementation"("androidx.appcompat:appcompat:1.4.1")
+    "uiImplementation"("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    "uiImplementation"("com.squareup.okhttp3:okhttp:4.9.3")
+    "uiImplementation"("androidx.core:core:$coreVersion")
+    "uiImplementation"("androidx.core:core-ktx:$coreVersion")
+    "uiImplementation"("androidx.fragment:fragment-ktx:$fragment_version")
+    "uiImplementation"("androidx.leanback:leanback:1.0.0")
+    "uiImplementation"("androidx.preference:preference:$preferenceVersion")
+    "uiImplementation"("androidx.preference:preference-ktx:$preferenceVersion")
+    "uiImplementation"("com.google.android.material:material:$materialVersion")
+    "uiImplementation"("androidx.webkit:webkit:1.4.0")
+    "uiImplementation"("androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1")
+    "uiImplementation"("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
+    "uiImplementation"("androidx.security:security-crypto:1.0.0")
+    "uiImplementation"("com.github.hedzr:android-file-chooser:v1.2.0-final")
 
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
