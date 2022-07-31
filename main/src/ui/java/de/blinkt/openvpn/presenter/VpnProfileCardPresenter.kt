@@ -12,8 +12,9 @@ import de.blinkt.openvpn.R
 import de.blinkt.openvpn.VpnProfile
 import de.blinkt.openvpn.core.VpnStatus
 import de.blinkt.openvpn.fragments.Utils.getWarningText
+import de.blinkt.openvpn.fragments.tv.OnLongPress
 
-class VpnProfileCardPresenter(context: Context) :
+class VpnProfileCardPresenter(context: Context, private val longPressListener: OnLongPress? = null) :
     AbstractCardPresenter<ImageCardView, VpnProfile?>(context) {
     override fun onCreateView(): ImageCardView {
         val imageCardView = LayoutInflater.from(context)
@@ -30,6 +31,7 @@ class VpnProfileCardPresenter(context: Context) :
         if (vpnProfile == null) {
             imageCardView.titleText = context.getText(R.string.menu_add_profile)
             imageCardView.mainImage = context.getDrawable(R.drawable.ic_add_circle_outline_white_24dp)
+            imageCardView.setOnLongClickListener(null)
         } else {
             imageCardView.titleText = vpnProfile.name
             val warningText = getWarningText(context, vpnProfile)
@@ -39,6 +41,10 @@ class VpnProfileCardPresenter(context: Context) :
                 imageCardView.contentText = warningText
             }
             imageCardView.mainImage = context.getDrawable(R.drawable.ic_stat_vpn)
+            imageCardView.setOnLongClickListener {
+                longPressListener?.invoke(vpnProfile)
+                true
+            }
         }
     }
 
@@ -46,6 +52,7 @@ class VpnProfileCardPresenter(context: Context) :
         imageCardView.titleText = null
         imageCardView.contentText = null
         imageCardView.mainImage = null
+        imageCardView.setOnLongClickListener(null)
     }
 
 }

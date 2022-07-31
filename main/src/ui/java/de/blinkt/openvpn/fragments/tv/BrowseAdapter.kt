@@ -14,16 +14,26 @@ import de.blinkt.openvpn.R
 import de.blinkt.openvpn.VpnProfile
 import de.blinkt.openvpn.presenter.VpnProfileCardPresenter
 
-class BrowseAdapter(context: Context, vpnProfiles: Collection<VpnProfile>) : ArrayObjectAdapter(ListRowPresenter()) {
+typealias OnLongPress = (vpnProfile: VpnProfile) -> Unit
+
+class BrowseAdapter(
+    context: Context,
+    vpnProfiles: Collection<VpnProfile>,
+    longPressListener: OnLongPress? = null
+) : ArrayObjectAdapter(ListRowPresenter()) {
     init {
-        addVpnProfiles(context, vpnProfiles)
+        addVpnProfiles(context, vpnProfiles, longPressListener)
     }
 
-    private fun addVpnProfiles(context: Context, vpnProfiles: Collection<VpnProfile>) {
-        val cardPresenter = VpnProfileCardPresenter(context)
+    private fun addVpnProfiles(
+        context: Context,
+        vpnProfiles: Collection<VpnProfile>,
+        longPressListener: OnLongPress?
+    ) {
+        val cardPresenter = VpnProfileCardPresenter(context, longPressListener)
         val listRowAdapter = ArrayObjectAdapter(cardPresenter)
         listRowAdapter.addAll(0, vpnProfiles)
-        listRowAdapter.add(null) // To put add profile cell
+        listRowAdapter.add(null) // To represent "Add Profile" card
         val headerItem = HeaderItem(context.getString(R.string.vpn_list_title))
         add(ListRow(headerItem, listRowAdapter))
     }

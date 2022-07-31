@@ -20,21 +20,28 @@ import androidx.leanback.widget.ArrayObjectAdapter
 import androidx.leanback.widget.ListRowPresenter
 import androidx.lifecycle.ViewModelProvider
 import com.obsez.android.lib.filechooser.ChooserDialog
+import de.blinkt.openvpn.LaunchVPN
 import de.blinkt.openvpn.R
 import de.blinkt.openvpn.VpnProfile
 import de.blinkt.openvpn.activities.ConfigConverter
+import de.blinkt.openvpn.activities.DisconnectVPN
 import de.blinkt.openvpn.activities.VPNPreferences
+import de.blinkt.openvpn.core.ConnectionStatus
+import de.blinkt.openvpn.core.OpenVPNService
+import de.blinkt.openvpn.core.PasswordDialogFragment.Companion.newInstance
+import de.blinkt.openvpn.core.VpnStatus
 import de.blinkt.openvpn.viewmodel.BrowseViewModel
 
 private const val START_VPN_CONFIG = 92
 private const val IMPORT_PROFILE = 231
 private const val TAG = "MainTvFragment"
 
-class MainTvFragment : BrowseSupportFragment() {
+class MainTvFragment : BrowseSupportFragment(), VpnStatus.StateListener {
 
     private val rowsAdapter = ArrayObjectAdapter(ListRowPresenter())
     private lateinit var viewModel: BrowseViewModel
     private lateinit var backgroundManager: BackgroundManager
+    private var lastIntent: Intent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,8 +55,19 @@ class MainTvFragment : BrowseSupportFragment() {
         setOnItemViewClickedListener { _, item, _, _ ->
             when (item) {
                 null -> onAddOrDuplicateProfile(null)
+                else -> startOrStopVPN(item as VpnProfile)
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        VpnStatus.addStateListener(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        VpnStatus.removeStateListener(this)
     }
 
     private fun setupUiElements() {
@@ -63,7 +81,9 @@ class MainTvFragment : BrowseSupportFragment() {
         adapter = rowsAdapter
         viewModel = ViewModelProvider(this)[BrowseViewModel::class.java]
         viewModel.browseContent.observe(this) {
-            adapter = BrowseAdapter(requireContext(), viewModel.browseContent.value ?: emptyList())
+            adapter = BrowseAdapter(requireContext(), viewModel.browseContent.value ?: emptyList()) {
+                editVPN(it)
+            }
         }
     }
 
@@ -143,6 +163,27 @@ class MainTvFragment : BrowseSupportFragment() {
         startActivityForResult(startImport, IMPORT_PROFILE)
     }
 
+    private fun startOrStopVPN(profile: VpnProfile) {
+        if (VpnStatus.isVPNActive() && profile.uuidString == VpnStatus.getLastConnectedVPNProfile()) {
+            if (lastIntent != null) {
+                startActivity(lastIntent)
+            } else {
+                val disconnectVPN = Intent(activity, DisconnectVPN::class.java)
+                startActivity(disconnectVPN)
+            }
+        } else {
+            startVPN(profile)
+        }
+    }
+
+    private fun startVPN(profile: VpnProfile) {
+        viewModel.saveVpnProfile(profile)
+        val intent = Intent(activity, LaunchVPN::class.java)
+        intent.putExtra(LaunchVPN.EXTRA_KEY, profile.uuid.toString())
+        intent.action = Intent.ACTION_MAIN
+        startActivity(intent)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -154,5 +195,34 @@ class MainTvFragment : BrowseSupportFragment() {
                 viewModel.reinit()
             }
         }
+    }
+
+    override fun updateState(
+        state: String?,
+        logmessage: String?,
+        localizedResId: Int,
+        level: ConnectionStatus,
+        intent: Intent?
+    ) {
+        requireActivity().runOnUiThread {
+            lastIntent = intent
+            rowsAdapter.notifyItemRangeChanged(0, viewModel.browseContent.value?.size ?: 0)
+            showUserRequestDialogIfNeeded(level, intent)
+        }
+    }
+
+    private fun showUserRequestDialogIfNeeded(level: ConnectionStatus, intent: Intent?): Boolean {
+        if (level == ConnectionStatus.LEVEL_WAITING_FOR_USER_INPUT) {
+            if (intent?.getStringExtra(OpenVPNService.EXTRA_CHALLENGE_TXT) != null) {
+                val pwInputFrag = newInstance(intent, false)
+                pwInputFrag?.show(parentFragmentManager, "dialog") ?: return false
+                return true
+            }
+        }
+        return false
+    }
+
+    override fun setConnectedVPN(uuid: String?) {
+        Toast.makeText(context, "Connected $uuid", Toast.LENGTH_SHORT).show()
     }
 }

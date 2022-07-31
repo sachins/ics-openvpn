@@ -16,7 +16,6 @@
             android:required="false" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- This library wants SDK version 23 but we do runtime checks to not use it before
         API 23 -->
