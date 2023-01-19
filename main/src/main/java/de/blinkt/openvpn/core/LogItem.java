@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -46,6 +47,14 @@ public class LogItem implements Parcelable {
         mRessourceId = ressourceId;
         mArgs = args;
     }
+
+    public LogItem(VpnStatus.LogLevel level, int verblevel, String message, long eventLogTime) {
+        mMessage = message;
+        mLevel = level;
+        mVerbosityLevel = verblevel;
+        logtime = eventLogTime;
+    }
+
 
     public LogItem(VpnStatus.LogLevel level, int verblevel, String message) {
         mMessage = message;
@@ -84,8 +93,6 @@ public class LogItem implements Parcelable {
                         other.mLevel.equals(mLevel)) &&
                 mVerbosityLevel == other.mVerbosityLevel &&
                 logtime == other.logtime;
-
-
     }
 
     public byte[] getMarschaledBytes() throws UnsupportedEncodingException, BufferOverflowException {
@@ -195,7 +202,7 @@ public class LogItem implements Parcelable {
     }
 
     private void marschalString(String str, ByteBuffer bb) throws UnsupportedEncodingException {
-        byte[] utf8bytes = str.getBytes("UTF-8");
+        byte[] utf8bytes = str.getBytes(StandardCharsets.UTF_8);
         bb.putInt(utf8bytes.length);
         bb.put(utf8bytes);
     }
@@ -204,7 +211,7 @@ public class LogItem implements Parcelable {
         int len = bb.getInt();
         byte[] utf8bytes = new byte[len];
         bb.get(utf8bytes);
-        return new String(utf8bytes, "UTF-8");
+        return new String(utf8bytes, StandardCharsets.UTF_8);
     }
 
 
@@ -240,6 +247,11 @@ public class LogItem implements Parcelable {
         mMessage = msg;
     }
 
+    public LogItem(VpnStatus.LogLevel loglevel, String msg, long logEventTime) {
+        mLevel = loglevel;
+        mMessage = msg;
+        logtime = logEventTime;
+    }
 
     public LogItem(VpnStatus.LogLevel loglevel, int ressourceId) {
         mRessourceId = ressourceId;

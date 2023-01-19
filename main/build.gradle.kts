@@ -13,15 +13,16 @@ plugins {
 }
 
 android {
-    compileSdk = 32
+    compileSdk = 33
 
-    ndkVersion = "24.0.8215888"
+    // Also update runcoverity.sh
+    ndkVersion = "25.1.8937393"
 
     defaultConfig {
         minSdk = 21
         targetSdk = 29 // Targeting < 30 to use file picker
-        versionCode = 192
-        versionName = "0.7.37"
+        versionCode = 197
+        versionName = "0.7.42"
         externalNativeBuild {
             cmake {
             }
@@ -140,6 +141,7 @@ fun registerGenTask(variantName: String, variantDirName: String): File {
         }
         commandLine(listOf(swigcmd, "-outdir", genDir, "-outcurrentdir", "-c++", "-java", "-package", "net.openvpn.ovpn3",
                 "-Isrc/main/cpp/openvpn3/client", "-Isrc/main/cpp/openvpn3/",
+                "-DOPENVPN_PLATFORM_ANDROID",
                 "-o", "${genDir}/ovpncli_wrap.cxx", "-oh", "${genDir}/ovpncli_wrap.h",
                 "src/main/cpp/openvpn3/client/ovpncli.i"))
         inputs.files( "src/main/cpp/openvpn3/client/ovpncli.i")
@@ -163,19 +165,19 @@ dependencies {
     // https://maven.google.com/web/index.html
     // https://developer.android.com/jetpack/androidx/releases/core
     val preferenceVersion = "1.2.0"
-    val coreVersion = "1.7.0"
-    val materialVersion = "1.5.0"
-    val fragment_version = "1.4.1"
+    val coreVersion = "1.9.0"
+    val materialVersion = "1.7.0"
+    val fragment_version = "1.5.5"
 
 
     implementation("androidx.annotation:annotation:1.3.0")
     implementation("androidx.core:core:$coreVersion")
 
-    "uiImplementation"("androidx.constraintlayout:constraintlayout:2.1.3")
-    "uiImplementation"("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
+    "uiImplementation"("androidx.constraintlayout:constraintlayout:2.1.4")
+    "uiImplementation"("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.22")
     "uiImplementation"("androidx.cardview:cardview:1.0.0")
     "uiImplementation"("androidx.recyclerview:recyclerview:1.2.1")
-    "uiImplementation"("androidx.appcompat:appcompat:1.4.1")
+    "uiImplementation"("androidx.appcompat:appcompat:1.5.1")
     "uiImplementation"("com.github.PhilJay:MPAndroidChart:v3.1.0")
     "uiImplementation"("com.squareup.okhttp3:okhttp:4.9.3")
     "uiImplementation"("androidx.core:core:$coreVersion")
@@ -186,8 +188,8 @@ dependencies {
     "uiImplementation"("androidx.preference:preference-ktx:$preferenceVersion")
     "uiImplementation"("com.google.android.material:material:$materialVersion")
     "uiImplementation"("androidx.webkit:webkit:1.4.0")
-    "uiImplementation"("androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1")
-    "uiImplementation"("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
+    "uiImplementation"("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    "uiImplementation"("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
     "uiImplementation"("androidx.security:security-crypto:1.0.0")
     "uiImplementation"("com.github.hedzr:android-file-chooser:v1.2.0-final")
 

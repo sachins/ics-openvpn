@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Vector;
 
 import de.blinkt.openvpn.VpnProfile;
 
@@ -35,7 +36,8 @@ public class ProfileManager {
     private static VpnProfile mLastConnectedVpn = null;
     private static VpnProfile tmpprofile = null;
     private HashMap<String, VpnProfile> profiles = new HashMap<>();
-
+    /* We got an error trying to save profiles, do not try encryption anymore */
+    private static boolean encryptionBroken = false;
 
     private ProfileManager() {
     }
@@ -107,6 +109,8 @@ public class ProfileManager {
     public static void saveProfile(Context context, VpnProfile profile) {
         SharedPreferences prefs = Preferences.getDefaultSharedPreferences(context);
         boolean preferEncryption = prefs.getBoolean("preferencryption", true);
+        if (encryptionBroken)
+            preferEncryption = false;
 
         profile.mVersion += 1;
         ObjectOutputStream vpnFile;
@@ -136,10 +140,19 @@ public class ProfileManager {
                         VpnStatus.logInfo("Cannot rename " + encryptedFile);
                     }
                 }
-                vpnFileOut = ProfileEncryption.getEncryptedVpOutput(context, encryptedFile);
-                deleteIfExists = filename + ".vp";
-                if (encryptedFileOld.exists()) {
-                    encryptedFileOld.delete();
+                try {
+                    vpnFileOut = ProfileEncryption.getEncryptedVpOutput(context, encryptedFile);
+                    deleteIfExists = filename + ".vp";
+                    if (encryptedFileOld.exists()) {
+                        encryptedFileOld.delete();
+                    }
+                } catch (IOException ioe)
+                {
+                    VpnStatus.logException(VpnStatus.LogLevel.INFO, "Error trying to write an encrypted VPN profile, disabling " +
+                            "encryption", ioe);
+                    encryptionBroken = true;
+                    saveProfile(context, profile);
+                    return;
                 }
             }
             else {
@@ -237,7 +250,7 @@ public class ProfileManager {
         editor.apply();
     }
 
-    public void addProfile(VpnProfile profile) {
+    public synchronized void addProfile(VpnProfile profile) {
         profiles.put(profile.getUUID().toString(), profile);
     }
 
@@ -246,7 +259,7 @@ public class ProfileManager {
      * profiles
      * @param context
      */
-    public void refreshVPNList(Context context)
+    public synchronized void refreshVPNList(Context context)
     {
         SharedPreferences listpref = Preferences.getSharedPreferencesMulti(PREFS_NAME, context);
         Set<String> vlist = listpref.getStringSet("vpnlist", null);
@@ -257,14 +270,20 @@ public class ProfileManager {
             if (!profiles.containsKey(vpnentry))
                 loadVpnEntry(context, vpnentry);
         }
+
+        Vector<String> removeUuids = new Vector<>();
         for (String profileuuid:profiles.keySet())
         {
             if (!vlist.contains(profileuuid))
-                profiles.remove(profileuuid);
+                removeUuids.add(profileuuid);
+        }
+        for (String uuid: removeUuids)
+        {
+            profiles.remove(uuid);
         }
     }
 
-    private void loadVPNList(Context context) {
+    private synchronized void loadVPNList(Context context) {
         profiles = new HashMap<>();
         SharedPreferences listpref = Preferences.getSharedPreferencesMulti(PREFS_NAME, context);
         Set<String> vlist = listpref.getStringSet("vpnlist", null);
@@ -279,7 +298,7 @@ public class ProfileManager {
         }
     }
 
-    private void loadVpnEntry(Context context, String vpnentry) {
+    private synchronized void loadVpnEntry(Context context, String vpnentry) {
         ObjectInputStream vpnfile = null;
         try {
             FileInputStream vpInput;
@@ -320,7 +339,7 @@ public class ProfileManager {
         }
     }
 
-    public void removeProfile(Context context, VpnProfile profile) {
+    public synchronized void removeProfile(Context context, VpnProfile profile) {
         String vpnentry = profile.getUUID().toString();
         profiles.remove(vpnentry);
         saveProfileList(context);

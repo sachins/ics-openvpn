@@ -45,6 +45,7 @@ if (NOT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} MATCHES "build/intermediates/cmake/.*s
             -c++
             -java -package net.openvpn.ovpn3
             -outcurrentdir
+            -DOPENVPN_PLATFORM_ANDROID
             -I${CMAKE_SOURCE_DIR}/openvpn3/client
             -I${CMAKE_SOURCE_DIR}/openvpn3
             ${CMAKE_SOURCE_DIR}/openvpn3/client/ovpncli.i)
@@ -91,8 +92,7 @@ if (NOT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} MATCHES "build/intermediates/cmake/.*s
             -DHAVE_LZ4
             -DASIO_STANDALONE
             -DUSE_ASIO
-            -DGIT_VERSION_STRING=\"${OPENVPN3_GIT}\"
-            -DNO_ROUTE_EXCLUDE_EMULATION
+            -DOPENVPN_CORE_GIT_VERSION=\"${OPENVPN3_GIT}\"
             -DOPENVPN_SHOW_SESSION_TOKEN
             -DOPENSSL_API_COMPAT=0x10200000L
             -DOPENVPN_ALLOW_INSECURE_CERTPROFILE
@@ -109,8 +109,8 @@ target_compile_definitions(ovpnutil PRIVATE -DTARGET_ARCH_ABI=\"${ANDROID_ABI}\"
         )
 target_link_libraries(ovpnutil log)
 
-add_library(rsapss SHARED ovpnutil/rsapss.cpp)
-target_link_libraries(rsapss log crypto ssl)
+add_library(osslutil SHARED ovpnutil/osslutil.cpp)
+target_link_libraries(osslutil log crypto ssl)
 
 if (NOT ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} MATCHES "build/intermediates/cmake/.*skeleton.*/")
     add_library(osslspeedtest SHARED ovpnutil/sslspeed.c)
@@ -166,6 +166,7 @@ set(openvpn_srcs
         src/openvpn/occ.c
         src/openvpn/openvpn.c
         src/openvpn/options.c
+        src/openvpn/options_util.c
         src/openvpn/otime.c
         src/openvpn/packet_id.c
         src/openvpn/perf.c
