@@ -30,7 +30,7 @@ class VpnProfileCardPresenter(context: Context, private val longPressListener: O
     override fun onBindViewHolder(vpnProfile: VpnProfile?, imageCardView: ImageCardView) {
         if (vpnProfile == null) {
             imageCardView.titleText = context.getText(R.string.menu_add_profile)
-            imageCardView.mainImage = context.getDrawable(R.drawable.ic_add_circle_outline_white_24dp)
+            imageCardView.mainImage = context.getDrawable(R.drawable.ic_baseline_add_circle_outline_24)
             imageCardView.setOnLongClickListener(null)
         } else {
             imageCardView.titleText = vpnProfile.name
