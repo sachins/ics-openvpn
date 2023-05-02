@@ -13,6 +13,10 @@ plugins {
 }
 
 android {
+    buildFeatures {
+        aidl = true
+    }
+    namespace = "de.blinkt.openvpn"
     compileSdk = 33
 
     // Also update runcoverity.sh
@@ -21,8 +25,8 @@ android {
     defaultConfig {
         minSdk = 21
         targetSdk = 29 // Targeting < 30 to use file picker
-        versionCode = 197
-        versionName = "0.7.42"
+        versionCode = 199
+        versionName = "0.7.44"
         externalNativeBuild {
             cmake {
             }
@@ -197,6 +201,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:3.9.0")
-    testImplementation("org.robolectric:robolectric:4.5.1")
+    testImplementation("org.robolectric:robolectric:4.10")
     testImplementation("androidx.test:core:1.4.0")
 }
