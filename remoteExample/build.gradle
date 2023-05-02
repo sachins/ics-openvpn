@@ -15,10 +15,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    namespace 'de.blinkt.openvpn.remote'
-    buildFeatures {
-        aidl true
-    }
 }
 
 dependencies {
