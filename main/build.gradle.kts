@@ -6,27 +6,29 @@ import com.android.build.gradle.api.ApplicationVariant
  */
 
 plugins {
-    id("com.android.application")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     id("checkstyle")
-
-    id("kotlin-android")
 }
 
 android {
+    buildToolsVersion = "33.0.1"
     buildFeatures {
         aidl = true
     }
     namespace = "de.blinkt.openvpn"
-    compileSdk = 33
+    compileSdk = 34
+    //compileSdkPreview = "UpsideDownCake"
 
     // Also update runcoverity.sh
-    ndkVersion = "25.1.8937393"
+    ndkVersion = "25.2.9519653"
 
     defaultConfig {
         minSdk = 21
         targetSdk = 29 // Targeting < 30 to use file picker
-        versionCode = 199
-        versionName = "0.7.44"
+        //targetSdkPreview = "UpsideDownCake"
+        versionCode = 204
+        versionName = "0.7.49"
         externalNativeBuild {
             cmake {
             }
@@ -34,7 +36,7 @@ android {
     }
 
 
-    testOptions.unitTests.isIncludeAndroidResources = true
+    //testOptions.unitTests.isIncludeAndroidResources = true
 
     externalNativeBuild {
         cmake {
@@ -76,6 +78,20 @@ android {
             enableV2Signing = true
         }
 
+        create("releaseOvpn2") {
+            // ~/.gradle/gradle.properties
+            val keystoreO2File: String? by project
+            storeFile = keystoreO2File?.let { file(it) }
+            val keystoreO2Password: String? by project
+            storePassword = keystoreO2Password
+            val keystoreO2AliasPassword: String? by project
+            keyPassword = keystoreO2AliasPassword
+            val keystoreO2Alias: String? by project
+            keyAlias = keystoreO2Alias
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+
     }
 
     lint {
@@ -84,32 +100,51 @@ android {
         disable += setOf("MissingTranslation", "UnsafeNativeCodeLocation")
     }
 
+
+    flavorDimensions += listOf("implementation", "ovpnimpl")
+
+    productFlavors {
+        create("ui") {
+            dimension = "implementation"
+        }
+
+        create("skeleton") {
+            dimension = "implementation"
+        }
+
+        create("ovpn23")
+        {
+            dimension = "ovpnimpl"
+            buildConfigField("boolean", "openvpn3", "true")
+        }
+
+        create("ovpn2")
+        {
+            dimension = "ovpnimpl"
+            versionNameSuffix = "-o2"
+            buildConfigField("boolean", "openvpn3", "false")
+        }
+    }
+
     buildTypes {
         getByName("release") {
             if (project.hasProperty("icsopenvpnDebugSign")) {
                 logger.warn("property icsopenvpnDebugSign set, using debug signing for release")
                 signingConfig = android.signingConfigs.getByName("debug")
             } else {
-                signingConfig = signingConfigs.getByName("release")
+                productFlavors["ovpn23"].signingConfig = signingConfigs.getByName("release")
+                productFlavors["ovpn2"].signingConfig = signingConfigs.getByName("releaseOvpn2")
             }
-        }
-    }
-    flavorDimensions += listOf("implementation")
-
-    productFlavors {
-        create("ui") {
-            dimension = "implementation"
-            buildConfigField("boolean", "openvpn3", "true")
-        }
-        create("skeleton") {
-            dimension = "implementation"
-            buildConfigField("boolean", "openvpn3", "false")
         }
     }
 
     compileOptions {
-        targetCompatibility = JavaVersion.VERSION_1_8
-        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     splits {
@@ -121,7 +156,36 @@ android {
         }
     }
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 
+    bundle {
+        codeTransparency {
+            signing {
+                val keystoreTPFile: String? by project
+                storeFile = keystoreTPFile?.let { file(it) }
+                val keystoreTPPassword: String? by project
+                storePassword = keystoreTPPassword
+                val keystoreTPAliasPassword: String? by project
+                keyPassword = keystoreTPAliasPassword
+                val keystoreTPAlias: String? by project
+                keyAlias = keystoreTPAlias
+
+                if (keystoreTPFile?.isEmpty() ?: true)
+                    println("keystoreTPFile not set, disabling transparency signing")
+                if (keystoreTPPassword?.isEmpty() ?: true)
+                    println("keystoreTPPassword not set, disabling transparency signing")
+                if (keystoreTPAliasPassword?.isEmpty() ?: true)
+                    println("keystoreTPAliasPassword not set, disabling transparency signing")
+                if (keystoreTPAlias?.isEmpty() ?: true)
+                    println("keyAlias not set, disabling transparency signing")
+
+            }
+        }
+    }
 }
 
 var swigcmd = "swig"
@@ -167,40 +231,31 @@ android.applicationVariants.all(object : Action<ApplicationVariant> {
 
 dependencies {
     // https://maven.google.com/web/index.html
-    // https://developer.android.com/jetpack/androidx/releases/core
-    val preferenceVersion = "1.2.0"
-    val coreVersion = "1.9.0"
-    val materialVersion = "1.7.0"
-    val fragment_version = "1.5.5"
+    implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core.ktx)
 
+    uiImplementation(libs.android.view.material)
+    uiImplementation(libs.androidx.appcompat)
+    uiImplementation(libs.androidx.cardview)
+    uiImplementation(libs.androidx.constraintlayout)
+    uiImplementation(libs.androidx.core.ktx)
+    uiImplementation(libs.androidx.fragment.ktx)
+    uiImplementation(libs.androidx.lifecycle.runtime.ktx)
+    uiImplementation(libs.androidx.lifecycle.viewmodel.ktx)
+    uiImplementation(libs.androidx.preference.ktx)
+    uiImplementation(libs.androidx.recyclerview)
+    uiImplementation(libs.androidx.security.crypto)
+    uiImplementation(libs.androidx.webkit)
+    uiImplementation(libs.kotlin)
+    uiImplementation(libs.mpandroidchart)
+    uiImplementation(libs.square.okhttp)
 
-    implementation("androidx.annotation:annotation:1.3.0")
-    implementation("androidx.core:core:$coreVersion")
-
-    "uiImplementation"("androidx.constraintlayout:constraintlayout:2.1.4")
-    "uiImplementation"("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.7.22")
-    "uiImplementation"("androidx.cardview:cardview:1.0.0")
-    "uiImplementation"("androidx.recyclerview:recyclerview:1.2.1")
-    "uiImplementation"("androidx.appcompat:appcompat:1.5.1")
-    "uiImplementation"("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    "uiImplementation"("com.squareup.okhttp3:okhttp:4.9.3")
-    "uiImplementation"("androidx.core:core:$coreVersion")
-    "uiImplementation"("androidx.core:core-ktx:$coreVersion")
-    "uiImplementation"("androidx.fragment:fragment-ktx:$fragment_version")
-    "uiImplementation"("androidx.leanback:leanback:1.0.0")
-    "uiImplementation"("androidx.preference:preference:$preferenceVersion")
-    "uiImplementation"("androidx.preference:preference-ktx:$preferenceVersion")
-    "uiImplementation"("com.google.android.material:material:$materialVersion")
-    "uiImplementation"("androidx.webkit:webkit:1.4.0")
-    "uiImplementation"("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    "uiImplementation"("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-    "uiImplementation"("androidx.security:security-crypto:1.0.0")
-    "uiImplementation"("com.github.hedzr:android-file-chooser:v1.2.0-final")
-
-
-    testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:3.9.0")
-    testImplementation("org.robolectric:robolectric:4.10")
-    testImplementation("androidx.test:core:1.4.0")
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlin)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.robolectric)
 }
+
+fun DependencyHandler.uiImplementation(dependencyNotation: Any): Dependency? =
+    add("uiImplementation", dependencyNotation)
