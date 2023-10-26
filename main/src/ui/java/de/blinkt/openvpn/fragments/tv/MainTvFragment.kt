@@ -165,8 +165,9 @@ class MainTvFragment : BrowseSupportFragment(), VpnStatus.StateListener {
 
     private fun startOrStopVPN(profile: VpnProfile) {
         if (VpnStatus.isVPNActive() && profile.uuidString == VpnStatus.getLastConnectedVPNProfile()) {
-            if (lastIntent != null) {
-                startActivity(lastIntent)
+            val i = lastIntent
+            if (i != null) {
+                startActivity(i)
             } else {
                 val disconnectVPN = Intent(activity, DisconnectVPN::class.java)
                 startActivity(disconnectVPN)

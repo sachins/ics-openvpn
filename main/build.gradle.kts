@@ -246,9 +246,11 @@ dependencies {
     uiImplementation(libs.androidx.recyclerview)
     uiImplementation(libs.androidx.security.crypto)
     uiImplementation(libs.androidx.webkit)
+    uiImplementation(libs.androidx.leanback)
     uiImplementation(libs.kotlin)
     uiImplementation(libs.mpandroidchart)
     uiImplementation(libs.square.okhttp)
+    uiImplementation(libs.android.file.chooser)
 
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.junit)
